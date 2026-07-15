@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 5: landmark schema and Parquet storage.
+Phase 6: pose quality scoring.
 
 The project currently verifies:
 
@@ -64,6 +64,8 @@ The project currently verifies:
 - MediaPipe Pose Landmarker smoke workflow
 - Tidy landmark schema
 - Parquet landmark storage
+- Frame-level pose quality scoring
+- Video-level pose quality summary
 
 ## Dataset plan
 
@@ -180,6 +182,30 @@ Expected columns include:
     presence
 
 The synthetic stick-figure sample may produce an empty Parquet table because MediaPipe may detect zero human poses. That is acceptable for the smoke workflow.
+
+
+## Pose quality scoring
+
+Compute frame-level and video-level pose quality metrics:
+
+    make pose-quality-sample
+
+This writes:
+
+    data/processed/features/synthetic_batting_sample.pose_quality.csv
+    data/processed/features/synthetic_batting_sample.pose_quality_summary.json
+
+Quality metrics include:
+
+    pose_detection_rate
+    landmark_coverage
+    mean_visibility
+    mean_presence
+    coordinate_valid_ratio
+    frame_quality_score
+    low_quality_frame_rate
+
+The synthetic stick-figure sample is expected to score poorly because MediaPipe detects no real human pose. This is useful because it proves that low-quality pose data is not silently trusted.
 
 ## Roadmap
 
