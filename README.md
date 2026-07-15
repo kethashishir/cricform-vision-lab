@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 14: public cricket dataset sample audit.
+Phase 15: real cricket sample pose audit.
 
 The project currently verifies:
 
@@ -74,6 +74,7 @@ The project currently verifies:
 - Streamlit artifact viewer demo UI
 - GitHub Actions CI for linting and tests
 - Public cricket-shot dataset archive audit and sampling
+- Real sampled-video pose detection audit
 
 ## Dataset plan
 
@@ -391,6 +392,28 @@ Downloaded archives and extracted video samples are generated data artifacts and
 Dataset limitation: this public dataset is designed for cricket shot classification, not validated biomechanics or coaching-grade movement analysis.
 
 Archive note: the downloaded tar archive may contain macOS AppleDouble files such as `._cover_0023.avi`. The sampler ignores those metadata sidecar files and extracts only real video files.
+
+
+## Real sample pose audit
+
+After downloading and sampling the public cricket-shot archive, run pose detection on the sampled real clips:
+
+    make real-pose-audit
+
+This writes:
+
+    data/processed/real_sample_pose_audit/pose_audit.csv
+    data/processed/real_sample_pose_audit/pose_audit_summary.json
+    data/interim/pose_landmarks/real_samples/
+
+The audit reports:
+
+    frames_processed
+    frames_with_pose
+    pose_detection_rate
+    best_video
+
+The pose detection rate measures whether landmarks were available. It is not a coaching-quality, biomechanics, or shot-correctness score.
 
 ## Roadmap
 

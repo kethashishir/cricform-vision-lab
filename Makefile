@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check ci clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app dataset-info download-cricket-shot audit-cricket-shot sample-cricket-shot
+.PHONY: setup test lint format check ci clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app dataset-info download-cricket-shot audit-cricket-shot sample-cricket-shot real-pose-audit
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -21,6 +21,8 @@ OVERLAY_OUTPUT=outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4
 DATASET_DIR=data/raw/datasets
 CRICKET_SHOT_ARCHIVE=$(DATASET_DIR)/cricketshot.tar.gz
 HF_SAMPLE_DIR=data/raw/videos/hf_cricket_shot
+REAL_AUDIT_OUTPUT_DIR=data/processed/real_sample_pose_audit
+REAL_AUDIT_JSONL_DIR=data/interim/pose_landmarks/real_samples
 
 setup:
 	python -m venv .venv
@@ -81,6 +83,16 @@ audit-cricket-shot:
 
 sample-cricket-shot:
 	. .venv/bin/activate && python -m cricform.ingest.sample_dataset $(CRICKET_SHOT_ARCHIVE) --output-dir $(HF_SAMPLE_DIR) --split test --samples-per-class 1 --overwrite
+
+real-pose-audit: download-pose-model sample-cricket-shot
+	. .venv/bin/activate && python -m cricform.pose.batch_pose_audit \
+		$(HF_SAMPLE_DIR) \
+		--model-path $(POSE_MODEL) \
+		--output-dir $(REAL_AUDIT_OUTPUT_DIR) \
+		--pose-jsonl-dir $(REAL_AUDIT_JSONL_DIR) \
+		--every-n-frames 5 \
+		--max-frames 30 \
+		--limit 10
 
 app:
 	. .venv/bin/activate && streamlit run src/cricform/app/streamlit_app.py
