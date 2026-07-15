@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 8: rule-based batting phase detection.
+Phase 9: movement feature extraction.
 
 The project currently verifies:
 
@@ -68,6 +68,7 @@ The project currently verifies:
 - Video-level pose quality summary
 - Annotated pose overlay video generation
 - Rule-based batting phase timeline detection
+- Interpretable movement-feature proxies
 
 ## Dataset plan
 
@@ -247,6 +248,30 @@ Phase labels include:
     unavailable
 
 The current detector is a heuristic based on wrist/hand motion proxies. It is not validated against expert cricket annotations and must not be described as coaching-grade.
+
+
+## Movement feature extraction
+
+Compute interpretable movement-feature proxies:
+
+    make movement-features-sample
+
+This writes:
+
+    data/processed/features/synthetic_batting_sample.movement_features.csv
+    data/processed/features/synthetic_batting_sample.movement_summary.json
+
+Current movement proxies include:
+
+    head_displacement_proxy
+    front_knee_bend_proxy_deg
+    shoulder_hip_separation_proxy_deg
+    wrist_speed_proxy
+    wrist_path_smoothness_proxy
+    backlift_height_proxy
+    follow_through_height_proxy
+
+These are 2D pose-derived proxies. They are not validated biomechanics, coaching-grade metrics, or injury-risk assessments.
 
 ## Roadmap
 

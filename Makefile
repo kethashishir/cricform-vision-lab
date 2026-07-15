@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample
+.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -7,6 +7,7 @@ POSE_MODEL_URL=https://storage.googleapis.com/mediapipe-models/pose_landmarker/p
 POSE_OUTPUT=data/interim/pose_landmarks/synthetic_batting_sample.pose.jsonl
 LANDMARK_PARQUET=data/interim/pose_landmarks/synthetic_batting_sample.landmarks.parquet
 FEATURE_OUTPUT_DIR=data/processed/features
+PHASE_TIMELINE=data/processed/features/synthetic_batting_sample.phase_timeline.csv
 OVERLAY_OUTPUT=outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4
 
 setup:
@@ -42,6 +43,9 @@ overlay-sample: pose-sample
 
 phase-sample: landmarks-sample
 	. .venv/bin/activate && python -m cricform.phases.detect_phases $(LANDMARK_PARQUET) --output-dir $(FEATURE_OUTPUT_DIR)
+
+movement-features-sample: phase-sample
+	. .venv/bin/activate && python -m cricform.features.motion_features $(LANDMARK_PARQUET) --phase-timeline-csv $(PHASE_TIMELINE) --output-dir $(FEATURE_OUTPUT_DIR)
 
 test:
 	. .venv/bin/activate && pytest -q
