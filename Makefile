@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app
+.PHONY: setup test lint format check ci clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -80,6 +80,10 @@ format:
 	. .venv/bin/activate && ruff format src tests
 
 check: lint test
+
+ci:
+	ruff check src tests
+	pytest -q
 
 clean:
 	rm -rf .pytest_cache .ruff_cache htmlcov .coverage

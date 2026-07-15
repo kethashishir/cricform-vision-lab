@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 12: Streamlit demo UI.
+Phase 13: tests and GitHub Actions CI.
 
 The project currently verifies:
 
@@ -72,6 +72,7 @@ The project currently verifies:
 - Small empirical baseline profile builder
 - Test-shot comparison JSON and Markdown report
 - Streamlit artifact viewer demo UI
+- GitHub Actions CI for linting and tests
 
 ## Dataset plan
 
@@ -346,6 +347,18 @@ Before opening the app, generate the sample artifacts:
     make overlay-sample
 
 The synthetic sample is expected to show insufficient pose data. That is honest behavior, not a UI failure.
+
+
+## Continuous integration
+
+GitHub Actions runs CI on pushes to main and pull requests.
+
+CI runs:
+
+    ruff check src tests
+    pytest -q
+
+CI intentionally does not download the full dataset, the MediaPipe model asset, or generated demo artifacts. The test suite uses tiny synthetic fixtures so the workflow stays fast and reproducible.
 
 ## Roadmap
 

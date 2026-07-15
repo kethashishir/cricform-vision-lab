@@ -48,3 +48,6 @@ outputs/sample_overlays/*
 # Model artifacts
 models/pose_landmarker/*.task
 !models/pose_landmarker/.gitkeep
+
+# Streamlit local state
+.streamlit/
