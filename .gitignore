@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Data and generated artifacts
+data/raw/videos/*
+!data/raw/videos/.gitkeep
+
+data/interim/frames/*
+!data/interim/frames/.gitkeep
+
+data/interim/pose_landmarks/*
+!data/interim/pose_landmarks/.gitkeep
+
+data/processed/features/*
+!data/processed/features/.gitkeep
+
+data/processed/baselines/*
+!data/processed/baselines/.gitkeep
+
+data/processed/reports/*
+!data/processed/reports/.gitkeep
+
+outputs/sample_reports/*
+!outputs/sample_reports/.gitkeep
+
+outputs/sample_overlays/*
+!outputs/sample_overlays/.gitkeep
+
+# Logs
+*.log
