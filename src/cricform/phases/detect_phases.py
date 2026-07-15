@@ -4,6 +4,7 @@ import argparse
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
+
 import pandas as pd
 
 DEFAULT_OUTPUT_DIR = Path("data/processed/features")
