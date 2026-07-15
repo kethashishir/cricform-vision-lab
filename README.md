@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 6: pose quality scoring.
+Phase 7: pose overlay video generation.
 
 The project currently verifies:
 
@@ -66,6 +66,7 @@ The project currently verifies:
 - Parquet landmark storage
 - Frame-level pose quality scoring
 - Video-level pose quality summary
+- Annotated pose overlay video generation
 
 ## Dataset plan
 
@@ -206,6 +207,21 @@ Quality metrics include:
     low_quality_frame_rate
 
 The synthetic stick-figure sample is expected to score poorly because MediaPipe detects no real human pose. This is useful because it proves that low-quality pose data is not silently trusted.
+
+
+## Pose overlay video
+
+Render an annotated overlay video:
+
+    make overlay-sample
+
+This writes:
+
+    outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4
+
+The overlay draws detected pose landmarks when available and labels frames where pose was not sampled or no pose was detected.
+
+For the synthetic sample, MediaPipe usually detects zero poses. That is expected. The overlay still proves that the project can generate visual audit artifacts and communicate pose failure clearly.
 
 ## Roadmap
 
