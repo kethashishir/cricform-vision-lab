@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample
+.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -8,6 +8,10 @@ POSE_OUTPUT=data/interim/pose_landmarks/synthetic_batting_sample.pose.jsonl
 LANDMARK_PARQUET=data/interim/pose_landmarks/synthetic_batting_sample.landmarks.parquet
 FEATURE_OUTPUT_DIR=data/processed/features
 PHASE_TIMELINE=data/processed/features/synthetic_batting_sample.phase_timeline.csv
+MOVEMENT_FEATURES=data/processed/features/synthetic_batting_sample.movement_features.csv
+BASELINE_DIR=data/processed/baselines
+BASELINE_MANIFEST=$(BASELINE_DIR)/synthetic_baseline_manifest.csv
+BASELINE_PROFILE=$(BASELINE_DIR)/synthetic_baseline_profile.json
 OVERLAY_OUTPUT=outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4
 
 setup:
@@ -46,6 +50,11 @@ phase-sample: landmarks-sample
 
 movement-features-sample: phase-sample
 	. .venv/bin/activate && python -m cricform.features.motion_features $(LANDMARK_PARQUET) --phase-timeline-csv $(PHASE_TIMELINE) --output-dir $(FEATURE_OUTPUT_DIR)
+
+baseline-sample: movement-features-sample
+	mkdir -p $(BASELINE_DIR)
+	printf "shot_id,shot_type,movement_features_csv\nsynthetic_batting_sample,unknown,../features/synthetic_batting_sample.movement_features.csv\n" > $(BASELINE_MANIFEST)
+	. .venv/bin/activate && python -m cricform.baseline.build_baseline $(BASELINE_MANIFEST) --output-profile $(BASELINE_PROFILE)
 
 test:
 	. .venv/bin/activate && pytest -q
