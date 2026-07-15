@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample
+.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -66,6 +66,9 @@ report-sample: baseline-sample
 	mkdir -p outputs/sample_reports
 	. .venv/bin/activate && python -m cricform.baseline.compare_shot $(MOVEMENT_SUMMARY) $(BASELINE_PROFILE) --shot-type unknown --output-comparison $(COMPARISON_JSON)
 	. .venv/bin/activate && python -m cricform.reports.render_report $(COMPARISON_JSON) --output-markdown $(REPORT_MD) --output-chart $(REPORT_CHART)
+
+app:
+	. .venv/bin/activate && streamlit run src/cricform/app/streamlit_app.py
 
 test:
 	. .venv/bin/activate && pytest -q
