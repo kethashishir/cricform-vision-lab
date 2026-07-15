@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 16: real cricket demo artifact pipeline.
+Phase 17: Streamlit real demo integration.
 
 The project currently verifies:
 
@@ -76,6 +76,7 @@ The project currently verifies:
 - Public cricket-shot dataset archive audit and sampling
 - Real sampled-video pose detection audit
 - Real cricket demo artifact generation from best audited clip
+- Streamlit real demo mode for visualizing real cricket artifacts
 
 ## Dataset plan
 
@@ -333,23 +334,24 @@ Launch the local demo app:
 
     make app
 
-The app reads generated local artifacts from the sample workflow and displays:
+The app defaults to real cricket demo mode. Before opening it, generate real demo artifacts:
 
-    overlay video
+    make real-demo
+
+The app displays:
+
+    real overlay video
     Markdown report
+    metric comparison chart
     comparison status
+    real pose audit summary
     pose quality summary
     phase timeline
     movement feature table
     baseline profile
     artifact status
 
-Before opening the app, generate the sample artifacts:
-
-    make report-sample
-    make overlay-sample
-
-The synthetic sample is expected to show insufficient pose data. That is honest behavior, not a UI failure.
+Synthetic sample mode is still available in the sidebar for smoke testing. The synthetic sample is expected to show insufficient pose data. That is honest behavior, not a UI failure.
 
 
 ## Continuous integration

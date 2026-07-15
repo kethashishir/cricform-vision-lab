@@ -9,7 +9,7 @@ import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-DEFAULT_ARTIFACT_PATHS = {
+SYNTHETIC_ARTIFACT_PATHS = {
     "overlay_video": PROJECT_ROOT
     / "outputs"
     / "sample_overlays"
@@ -24,6 +24,10 @@ DEFAULT_ARTIFACT_PATHS = {
     / "processed"
     / "reports"
     / "synthetic_batting_sample_comparison.json",
+    "report_chart": PROJECT_ROOT
+    / "outputs"
+    / "sample_reports"
+    / "synthetic_batting_sample_metric_comparison.png",
     "pose_quality_summary": PROJECT_ROOT
     / "data"
     / "processed"
@@ -61,6 +65,100 @@ DEFAULT_ARTIFACT_PATHS = {
     / "synthetic_baseline_profile.json",
 }
 
+REAL_DEMO_ARTIFACT_PATHS = {
+    "overlay_video": PROJECT_ROOT
+    / "outputs"
+    / "real_demo"
+    / "test_pull_pull_0025_pose_overlay.mp4",
+    "report_markdown": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "reports"
+    / "test_pull_pull_0025_report.md",
+    "comparison_json": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "reports"
+    / "test_pull_pull_0025_comparison.json",
+    "report_chart": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "reports"
+    / "test_pull_pull_0025_metric_comparison.png",
+    "real_demo_summary": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "real_demo_summary.json",
+    "pose_audit_summary": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_sample_pose_audit"
+    / "pose_audit_summary.json",
+    "pose_audit_csv": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_sample_pose_audit"
+    / "pose_audit.csv",
+    "pose_quality_summary": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "features"
+    / "test_pull_pull_0025.pose_quality_summary.json",
+    "pose_quality_csv": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "features"
+    / "test_pull_pull_0025.pose_quality.csv",
+    "phase_summary": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "features"
+    / "test_pull_pull_0025.phase_summary.json",
+    "phase_timeline_csv": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "features"
+    / "test_pull_pull_0025.phase_timeline.csv",
+    "movement_summary": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "features"
+    / "test_pull_pull_0025.movement_summary.json",
+    "movement_features_csv": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "features"
+    / "test_pull_pull_0025.movement_features.csv",
+    "baseline_profile": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "baselines"
+    / "real_demo_baseline_profile.json",
+}
+
+
+def artifact_paths_for_mode(mode: str) -> dict[str, Path]:
+    """Return artifact paths for the selected demo mode."""
+
+    if mode == "real":
+        return dict(REAL_DEMO_ARTIFACT_PATHS)
+
+    if mode == "synthetic":
+        return dict(SYNTHETIC_ARTIFACT_PATHS)
+
+    raise ValueError(f"Unsupported artifact mode: {mode}")
+
 
 def artifact_status(paths: dict[str, Path]) -> pd.DataFrame:
     """Return existence and size information for app artifacts."""
@@ -79,15 +177,6 @@ def artifact_status(paths: dict[str, Path]) -> pd.DataFrame:
         )
 
     return pd.DataFrame(rows)
-
-
-def _display_path(path: Path) -> str:
-    """Return a repo-relative path when possible, otherwise an absolute path."""
-
-    try:
-        return str(path.relative_to(PROJECT_ROOT))
-    except ValueError:
-        return str(path)
 
 
 def load_json(path: Path) -> dict[str, Any] | None:
@@ -155,32 +244,47 @@ def app() -> None:
         "and honest limitations."
     )
 
-    paths = _sidebar_paths()
+    mode = st.sidebar.radio(
+        "Demo mode",
+        options=["real", "synthetic"],
+        format_func=lambda value: "Real cricket demo" if value == "real" else "Synthetic sample",
+        index=0,
+    )
+    paths = _sidebar_paths(mode)
 
     comparison = load_json(paths["comparison_json"])
     quality_summary = load_json(paths["pose_quality_summary"])
     phase_summary = load_json(paths["phase_summary"])
     movement_summary = load_json(paths["movement_summary"])
     baseline_profile = load_json(paths["baseline_profile"])
+    real_demo_summary = load_json(paths.get("real_demo_summary", Path("__missing__")))
+    pose_audit_summary = load_json(paths.get("pose_audit_summary", Path("__missing__")))
 
     cards = key_metric_cards(comparison, quality_summary, movement_summary)
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Comparison status", cards["comparison_status"])
     col2.metric("Usable motion frames", cards["usable_motion_frames"])
-    col3.metric("Pose detection rate", cards["pose_detection_rate"])
+    col3.metric("Pose detection rate", _display_pose_detection_rate(cards, real_demo_summary))
     col4.metric("Mean frame quality", cards["mean_frame_quality"])
 
-    st.info(
-        "This demo reads local pipeline artifacts. If values are missing or show "
-        "`insufficient_shot_pose_data`, that is expected for the synthetic sample."
-    )
+    if mode == "real":
+        st.success(
+            "Real demo mode uses the best sampled cricket clip from the pose audit. "
+            "Run `make real-demo` if artifacts are missing."
+        )
+    else:
+        st.info(
+            "Synthetic mode is useful for smoke testing. It usually has zero pose "
+            "detections and intentionally shows insufficient data."
+        )
 
     tabs = st.tabs(
         [
             "Overview",
             "Overlay video",
             "Report",
+            "Pose audit",
             "Quality",
             "Phases",
             "Movement",
@@ -190,30 +294,43 @@ def app() -> None:
     )
 
     with tabs[0]:
-        _render_overview(comparison, quality_summary, phase_summary, movement_summary)
+        _render_overview(
+            comparison=comparison,
+            quality_summary=quality_summary,
+            phase_summary=phase_summary,
+            movement_summary=movement_summary,
+            real_demo_summary=real_demo_summary,
+        )
 
     with tabs[1]:
         _render_overlay(paths["overlay_video"])
 
     with tabs[2]:
-        _render_report(paths["report_markdown"])
+        _render_report(paths["report_markdown"], paths.get("report_chart"))
 
     with tabs[3]:
-        _render_quality(paths["pose_quality_summary"], paths["pose_quality_csv"])
+        _render_pose_audit(
+            paths.get("pose_audit_summary"),
+            paths.get("pose_audit_csv"),
+            pose_audit_summary,
+        )
 
     with tabs[4]:
-        _render_phases(paths["phase_summary"], paths["phase_timeline_csv"])
+        _render_quality(paths["pose_quality_summary"], paths["pose_quality_csv"])
 
     with tabs[5]:
-        _render_movement(paths["movement_summary"], paths["movement_features_csv"])
+        _render_phases(paths["phase_summary"], paths["phase_timeline_csv"])
 
     with tabs[6]:
-        _render_baseline(baseline_profile)
+        _render_movement(paths["movement_summary"], paths["movement_features_csv"])
 
     with tabs[7]:
+        _render_baseline(baseline_profile)
+
+    with tabs[8]:
         st.subheader("Artifact status")
         st.dataframe(artifact_status(paths), use_container_width=True)
-        st.code("make report-sample\nmake overlay-sample", language="bash")
+        st.code("make real-demo\nmake app", language="bash")
 
     st.divider()
     st.caption(
@@ -222,13 +339,13 @@ def app() -> None:
     )
 
 
-def _sidebar_paths() -> dict[str, Path]:
+def _sidebar_paths(mode: str) -> dict[str, Path]:
     st.sidebar.header("Artifact paths")
-    st.sidebar.caption("Defaults point to the synthetic sample workflow.")
+    st.sidebar.caption("Defaults point to the selected workflow.")
 
     paths = {}
 
-    for key, default_path in DEFAULT_ARTIFACT_PATHS.items():
+    for key, default_path in artifact_paths_for_mode(mode).items():
         user_value = st.sidebar.text_input(
             label=key,
             value=str(default_path.relative_to(PROJECT_ROOT)),
@@ -243,8 +360,23 @@ def _render_overview(
     quality_summary: dict[str, Any] | None,
     phase_summary: dict[str, Any] | None,
     movement_summary: dict[str, Any] | None,
+    real_demo_summary: dict[str, Any] | None,
 ) -> None:
     st.subheader("Pipeline overview")
+
+    if real_demo_summary:
+        st.markdown("### Selected real demo clip")
+        st.json(
+            {
+                "selected_video_id": real_demo_summary.get("selected_video_id"),
+                "selected_shot_type": real_demo_summary.get("selected_shot_type"),
+                "selected_pose_detection_rate": real_demo_summary.get(
+                    "selected_pose_detection_rate"
+                ),
+                "baseline_video_count": real_demo_summary.get("baseline_video_count"),
+                "limitation": real_demo_summary.get("limitation"),
+            }
+        )
 
     col1, col2 = st.columns(2)
 
@@ -278,21 +410,52 @@ def _render_overlay(video_path: Path) -> None:
     st.subheader("Pose overlay video")
 
     if not video_path.exists():
-        st.warning("Overlay video not found. Run `make overlay-sample`.")
+        st.warning("Overlay video not found. Run `make real-demo` or `make overlay-sample`.")
         return
 
     st.video(str(video_path))
     st.caption(str(video_path.relative_to(PROJECT_ROOT)))
 
 
-def _render_report(report_path: Path) -> None:
+def _render_report(report_path: Path, chart_path: Path | None) -> None:
     st.subheader("Generated report")
 
+    if chart_path is not None and chart_path.exists():
+        st.image(str(chart_path), caption="Shot vs baseline metric comparison")
+
     if not report_path.exists():
-        st.warning("Markdown report not found. Run `make report-sample`.")
+        st.warning("Markdown report not found. Run `make real-demo` or `make report-sample`.")
         return
 
     st.markdown(report_path.read_text())
+
+
+def _render_pose_audit(
+    summary_path: Path | None,
+    csv_path: Path | None,
+    summary: dict[str, Any] | None,
+) -> None:
+    st.subheader("Real sample pose audit")
+
+    if summary_path is None or csv_path is None:
+        st.info("Pose audit is only available in real demo mode.")
+        return
+
+    if summary is None:
+        st.warning("Pose audit summary not found. Run `make real-demo`.")
+    else:
+        st.json(summary)
+
+    audit_df = load_csv(csv_path)
+    if audit_df.empty:
+        st.info("No pose-audit rows available.")
+        return
+
+    st.dataframe(audit_df, use_container_width=True)
+
+    if "pose_detection_rate" in audit_df.columns and "shot_type" in audit_df.columns:
+        chart_df = audit_df.sort_values("pose_detection_rate", ascending=False)
+        st.bar_chart(chart_df.set_index("shot_type")["pose_detection_rate"])
 
 
 def _render_quality(summary_path: Path, csv_path: Path) -> None:
@@ -302,7 +465,7 @@ def _render_quality(summary_path: Path, csv_path: Path) -> None:
     quality_df = load_csv(csv_path)
 
     if summary is None:
-        st.warning("Pose quality summary not found. Run `make pose-quality-sample`.")
+        st.warning("Pose quality summary not found.")
     else:
         st.json(summary)
 
@@ -321,12 +484,12 @@ def _render_phases(summary_path: Path, csv_path: Path) -> None:
     phase_df = load_csv(csv_path)
 
     if summary is None:
-        st.warning("Phase summary not found. Run `make phase-sample`.")
+        st.warning("Phase summary not found.")
     else:
         st.json(summary)
 
     if phase_df.empty:
-        st.info("No phase rows available. This is expected when pose extraction finds no pose.")
+        st.info("No phase rows available.")
     else:
         st.dataframe(phase_df, use_container_width=True)
         if "phase" in phase_df.columns:
@@ -340,7 +503,7 @@ def _render_movement(summary_path: Path, csv_path: Path) -> None:
     movement_df = load_csv(csv_path)
 
     if summary is None:
-        st.warning("Movement summary not found. Run `make movement-features-sample`.")
+        st.warning("Movement summary not found.")
     else:
         st.json(summary)
 
@@ -369,7 +532,7 @@ def _render_baseline(baseline_profile: dict[str, Any] | None) -> None:
     st.subheader("Baseline profile")
 
     if baseline_profile is None:
-        st.warning("Baseline profile not found. Run `make baseline-sample`.")
+        st.warning("Baseline profile not found.")
         return
 
     st.json(
@@ -398,6 +561,23 @@ def _render_baseline(baseline_profile: dict[str, Any] | None) -> None:
         )
 
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
+
+
+def _display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
+
+
+def _display_pose_detection_rate(
+    cards: dict[str, str],
+    real_demo_summary: dict[str, Any] | None,
+) -> str:
+    if real_demo_summary and real_demo_summary.get("selected_pose_detection_rate") is not None:
+        return _format_optional_number(real_demo_summary.get("selected_pose_detection_rate"))
+
+    return cards["pose_detection_rate"]
 
 
 def _format_optional_number(value: Any) -> str:

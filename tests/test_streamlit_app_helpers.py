@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from cricform.app.streamlit_app import (
+    artifact_paths_for_mode,
     artifact_status,
     comparison_badge_status,
     key_metric_cards,
@@ -64,3 +67,27 @@ def test_key_metric_cards() -> None:
     assert cards["usable_motion_frames"] == "12"
     assert cards["pose_detection_rate"] == "0.750"
     assert cards["mean_frame_quality"] == "0.600"
+
+
+def test_artifact_paths_for_mode_real() -> None:
+    paths = artifact_paths_for_mode("real")
+
+    assert paths["overlay_video"].as_posix().endswith(
+        "outputs/real_demo/test_pull_pull_0025_pose_overlay.mp4"
+    )
+    assert paths["real_demo_summary"].as_posix().endswith(
+        "data/processed/real_demo/real_demo_summary.json"
+    )
+
+
+def test_artifact_paths_for_mode_synthetic() -> None:
+    paths = artifact_paths_for_mode("synthetic")
+
+    assert paths["overlay_video"].as_posix().endswith(
+        "outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4"
+    )
+
+
+def test_artifact_paths_for_mode_rejects_unknown_mode() -> None:
+    with pytest.raises(ValueError, match="Unsupported artifact mode"):
+        artifact_paths_for_mode("unknown")
