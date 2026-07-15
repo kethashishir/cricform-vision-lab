@@ -1,9 +1,12 @@
-.PHONY: setup test lint format check clean
+.PHONY: setup test lint format check clean sample-video
 
 setup:
 	python -m venv .venv
 	. .venv/bin/activate && python -m pip install --upgrade pip
 	. .venv/bin/activate && python -m pip install -e ".[dev]"
+
+sample-video:
+	. .venv/bin/activate && python -m cricform.ingest.create_sample_video --overwrite
 
 test:
 	. .venv/bin/activate && pytest -q
