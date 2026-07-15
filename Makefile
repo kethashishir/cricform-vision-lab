@@ -1,4 +1,6 @@
-.PHONY: setup test lint format check clean sample-video
+.PHONY: setup test lint format check clean sample-video video-info extract-frames
+
+SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 
 setup:
 	python -m venv .venv
@@ -7,6 +9,12 @@ setup:
 
 sample-video:
 	. .venv/bin/activate && python -m cricform.ingest.create_sample_video --overwrite
+
+video-info:
+	. .venv/bin/activate && python -m cricform.video.metadata $(SAMPLE_VIDEO) --json
+
+extract-frames:
+	. .venv/bin/activate && python -m cricform.video.frame_extract $(SAMPLE_VIDEO) --every-n-frames 6 --overwrite
 
 test:
 	. .venv/bin/activate && pytest -q

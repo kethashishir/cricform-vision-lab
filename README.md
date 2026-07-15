@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 2: synthetic local sample video workflow.
+Phase 3: frame extraction and video metadata.
 
 The project currently verifies:
 
@@ -59,6 +59,8 @@ The project currently verifies:
 - Data/output directory layout
 - Makefile workflow
 - Synthetic local video fixture generation
+- Video metadata inspection
+- Deterministic frame extraction
 
 ## Dataset plan
 
@@ -110,6 +112,23 @@ This creates:
     data/raw/videos/synthetic_batting_sample.mp4
 
 The video is synthetic and exists only to test video I/O and pipeline plumbing. It is not real cricket footage and must not be used for coaching, biomechanics, or dataset-quality claims.
+
+
+## Video metadata and frame extraction
+
+Inspect the synthetic sample video:
+
+    make video-info
+
+Extract sampled frames:
+
+    make extract-frames
+
+This writes frames to:
+
+    data/interim/frames/synthetic_batting_sample/
+
+Extracted frames are generated artifacts and should not be committed.
 
 ## Roadmap
 
