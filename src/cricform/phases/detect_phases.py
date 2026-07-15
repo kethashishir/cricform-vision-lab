@@ -4,8 +4,6 @@ import argparse
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
-
 import pandas as pd
 
 DEFAULT_OUTPUT_DIR = Path("data/processed/features")
@@ -217,7 +215,10 @@ def write_phase_detection_outputs(
         if phase in set(phase_timeline["phase"].tolist())
     ] if not phase_timeline.empty else []
 
-    usable_frames = int((phase_timeline["phase"] != "unavailable").sum()) if not phase_timeline.empty else 0
+    if phase_timeline.empty:
+        usable_frames = 0
+    else:
+        usable_frames = int((phase_timeline["phase"] != "unavailable").sum())
 
     summary_values = {
         "rows": int(len(phase_timeline)),
