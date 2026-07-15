@@ -55,3 +55,10 @@ models/pose_landmarker/*.task
 # Downloaded public datasets
 data/raw/datasets/*
 !data/raw/datasets/.gitkeep
+
+# Real demo generated artifacts
+data/processed/real_demo/
+data/processed/real_sample_pose_audit/
+outputs/real_demo/
+data/interim/pose_landmarks/real_samples/
+
