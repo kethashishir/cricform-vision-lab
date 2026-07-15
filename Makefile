@@ -1,6 +1,10 @@
-.PHONY: setup test lint format check clean sample-video video-info extract-frames
+.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
+POSE_MODEL_DIR=models/pose_landmarker
+POSE_MODEL=$(POSE_MODEL_DIR)/pose_landmarker_lite.task
+POSE_MODEL_URL=https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task
+POSE_OUTPUT=data/interim/pose_landmarks/synthetic_batting_sample.pose.jsonl
 
 setup:
 	python -m venv .venv
@@ -15,6 +19,14 @@ video-info:
 
 extract-frames:
 	. .venv/bin/activate && python -m cricform.video.frame_extract $(SAMPLE_VIDEO) --every-n-frames 6 --overwrite
+
+download-pose-model:
+	mkdir -p $(POSE_MODEL_DIR)
+	test -f $(POSE_MODEL) || curl -L $(POSE_MODEL_URL) -o $(POSE_MODEL)
+	ls -lh $(POSE_MODEL)
+
+pose-sample: download-pose-model sample-video
+	. .venv/bin/activate && python -m cricform.pose.mediapipe_pose $(SAMPLE_VIDEO) --model-path $(POSE_MODEL) --output-jsonl $(POSE_OUTPUT) --every-n-frames 3 --max-frames 24
 
 test:
 	. .venv/bin/activate && pytest -q
