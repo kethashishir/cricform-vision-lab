@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 10: baseline builder.
+Phase 11: test-shot comparison report.
 
 The project currently verifies:
 
@@ -70,6 +70,7 @@ The project currently verifies:
 - Rule-based batting phase timeline detection
 - Interpretable movement-feature proxies
 - Small empirical baseline profile builder
+- Test-shot comparison JSON and Markdown report
 
 ## Dataset plan
 
@@ -295,6 +296,30 @@ The baseline manifest has columns:
 The baseline profile groups usable shots by shot_type and computes simple mean, standard deviation, min, max, and count statistics for movement-feature proxies.
 
 The synthetic sample usually has no usable pose landmarks, so the generated sample baseline will show zero usable shots. That is acceptable for the smoke workflow. Real baselines require real pose-detected clips.
+
+
+## Test-shot comparison report
+
+Generate a shot-vs-baseline comparison report:
+
+    make report-sample
+
+This writes:
+
+    data/processed/reports/synthetic_batting_sample_comparison.json
+    data/processed/reports/synthetic_batting_sample_report.md
+    outputs/sample_reports/synthetic_batting_sample_metric_comparison.png
+
+The synthetic sample usually has no usable pose landmarks, so the report should clearly state that comparison is not meaningful yet. This is expected and honest.
+
+Reports include:
+
+    comparison_status
+    usable_motion_frames
+    metric comparison table
+    notes
+    honest limitations
+    optional metric comparison chart when enough data exists
 
 ## Roadmap
 
