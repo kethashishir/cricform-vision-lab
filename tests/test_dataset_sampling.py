@@ -17,9 +17,12 @@ def _create_fake_cricket_archive(tmp_path: Path) -> Path:
 
     files = [
         source_dir / "dataset" / "test" / "cover" / "cover_001.mp4",
+        source_dir / "dataset" / "test" / "cover" / "._cover_001.mp4",
         source_dir / "dataset" / "test" / "pull" / "pull_001.mp4",
+        source_dir / "dataset" / "test" / "pull" / "._pull_001.mp4",
         source_dir / "dataset" / "train" / "cover" / "cover_002.mp4",
         source_dir / "dataset" / "val" / "sweep" / "sweep_001.mp4",
+        source_dir / "__MACOSX" / "dataset" / "test" / "cover" / "cover_001.mp4",
     ]
 
     for file_path in files:
@@ -56,6 +59,8 @@ def test_audit_cricket_shot_archive(tmp_path: Path) -> None:
     audit = audit_cricket_shot_archive(archive_path)
 
     assert audit.total_video_files == 4
+    assert all('/._' not in member for member in audit.sample_members)
+    assert all('__MACOSX' not in member for member in audit.sample_members)
     assert audit.counts_by_split["test"] == 2
     assert audit.counts_by_shot_type["cover"] == 2
     assert audit.counts_by_split_and_shot_type["test"]["cover"] == 1

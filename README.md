@@ -390,6 +390,8 @@ Downloaded archives and extracted video samples are generated data artifacts and
 
 Dataset limitation: this public dataset is designed for cricket shot classification, not validated biomechanics or coaching-grade movement analysis.
 
+Archive note: the downloaded tar archive may contain macOS AppleDouble files such as `._cover_0023.avi`. The sampler ignores those metadata sidecar files and extracts only real video files.
+
 ## Roadmap
 
 - Phase 0: dataset and tool feasibility
