@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample
+.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -6,6 +6,7 @@ POSE_MODEL=$(POSE_MODEL_DIR)/pose_landmarker_lite.task
 POSE_MODEL_URL=https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task
 POSE_OUTPUT=data/interim/pose_landmarks/synthetic_batting_sample.pose.jsonl
 LANDMARK_PARQUET=data/interim/pose_landmarks/synthetic_batting_sample.landmarks.parquet
+FEATURE_OUTPUT_DIR=data/processed/features
 
 setup:
 	python -m venv .venv
@@ -31,6 +32,9 @@ pose-sample: download-pose-model sample-video
 
 landmarks-sample: pose-sample
 	. .venv/bin/activate && python -m cricform.pose.landmark_schema $(POSE_OUTPUT) --output-parquet $(LANDMARK_PARQUET)
+
+pose-quality-sample: pose-sample
+	. .venv/bin/activate && python -m cricform.features.quality_features $(POSE_OUTPUT) --output-dir $(FEATURE_OUTPUT_DIR)
 
 test:
 	. .venv/bin/activate && pytest -q
