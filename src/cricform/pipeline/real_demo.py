@@ -228,9 +228,21 @@ def build_real_demo_artifacts(
         selected_pose_detection_rate=round(selected_pose_detection_rate, 4),
         output_landmark_parquet_path=str(landmark_summary["output_parquet_path"]),
         output_overlay_video_path=str(overlay_summary["output_video_path"]),
-        output_pose_quality_summary_path=str(quality_summary["output_summary_json_path"]),
-        output_phase_summary_path=str(phase_summary["output_summary_json_path"]),
-        output_movement_summary_path=str(movement_summary["output_summary_json_path"]),
+        output_pose_quality_summary_path=_summary_path_value(
+            quality_summary,
+            ("output_summary_json_path", "output_summary_path"),
+            feature_dir / f"{selected_video_id}.pose_quality_summary.json",
+        ),
+        output_phase_summary_path=_summary_path_value(
+            phase_summary,
+            ("output_summary_json_path", "output_summary_path"),
+            feature_dir / f"{selected_video_id}.phase_summary.json",
+        ),
+        output_movement_summary_path=_summary_path_value(
+            movement_summary,
+            ("output_summary_json_path", "output_summary_path"),
+            feature_dir / f"{selected_video_id}.movement_summary.json",
+        ),
         output_baseline_profile_path=str(baseline_summary["output_profile_path"]),
         output_comparison_json_path=str(comparison_summary["output_comparison_path"]),
         output_report_markdown_path=str(report_summary["output_markdown_path"]),
@@ -278,6 +290,21 @@ def write_mixed_real_sample_manifest(
 
     pd.DataFrame(rows).to_csv(baseline_manifest_path, index=False)
     return len(rows)
+
+
+def _summary_path_value(
+    command_summary: dict[str, Any],
+    candidate_keys: tuple[str, ...],
+    fallback_path: Path,
+) -> str:
+    """Read a summary path from a command payload, with a stable fallback."""
+
+    for key in candidate_keys:
+        value = command_summary.get(key)
+        if value:
+            return str(value)
+
+    return str(fallback_path)
 
 
 def _relative_or_absolute(path: Path, start: Path) -> str:

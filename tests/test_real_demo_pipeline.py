@@ -7,6 +7,7 @@ import pandas as pd
 
 from cricform.pipeline.real_demo import (
     _parse_json_from_stdout,
+    build_real_demo_artifacts,
     select_best_pose_audit_row,
     write_mixed_real_sample_manifest,
 )
@@ -118,3 +119,110 @@ def test_write_mixed_real_sample_manifest(tmp_path: Path) -> None:
     assert set(manifest["shot_id"]) == {"cover", "pull"}
     assert set(manifest["shot_type"]) == {"real_sample_mixed"}
     assert set(manifest["movement_features_csv"]) == {"../features/movement.csv"}
+
+
+def test_build_real_demo_artifacts_accepts_quality_output_summary_path(
+    tmp_path: Path,
+) -> None:
+    video_path = tmp_path / "sample" / "test" / "pull" / "pull_0025.avi"
+    pose_jsonl_path = tmp_path / "pose" / "test_pull_pull_0025.pose.jsonl"
+    audit_csv = tmp_path / "audit" / "pose_audit.csv"
+    audit_summary = tmp_path / "audit" / "pose_audit_summary.json"
+    output_root = tmp_path / "real_demo"
+    overlay_dir = tmp_path / "overlays"
+
+    video_path.parent.mkdir(parents=True)
+    pose_jsonl_path.parent.mkdir(parents=True)
+    audit_csv.parent.mkdir(parents=True)
+
+    video_path.write_bytes(b"fake-video")
+    pose_jsonl_path.write_text("")
+
+    best_video = {
+        "video_id": "test_pull_pull_0025",
+        "split": "test",
+        "shot_type": "pull",
+        "video_path": str(video_path),
+        "output_jsonl_path": str(pose_jsonl_path),
+        "frames_seen": 34,
+        "frames_processed": 7,
+        "frames_with_pose": 4,
+        "pose_detection_rate": 0.5714,
+        "status": "pose_detected",
+        "error": "",
+    }
+
+    pd.DataFrame([best_video]).to_csv(audit_csv, index=False)
+    audit_summary.write_text(json.dumps({"best_video": best_video}))
+
+    def fake_runner(command: list[str]) -> dict[str, str]:
+        module_name = command[command.index("-m") + 1]
+
+        if module_name == "cricform.pose.landmark_schema":
+            return {"output_parquet_path": str(output_root / "pose" / "demo.parquet")}
+
+        if module_name == "cricform.features.quality_features":
+            return {
+                "output_summary_path": str(
+                    output_root / "features" / "demo.pose_quality_summary.json"
+                )
+            }
+
+        if module_name == "cricform.phases.detect_phases":
+            return {
+                "output_phase_csv_path": str(
+                    output_root / "features" / "demo.phase_timeline.csv"
+                ),
+                "output_summary_json_path": str(
+                    output_root / "features" / "demo.phase_summary.json"
+                ),
+            }
+
+        if module_name == "cricform.features.motion_features":
+            return {
+                "output_features_csv_path": str(
+                    output_root / "features" / "demo.movement_features.csv"
+                ),
+                "output_summary_json_path": str(
+                    output_root / "features" / "demo.movement_summary.json"
+                ),
+            }
+
+        if module_name == "cricform.video.overlay":
+            return {"output_video_path": str(overlay_dir / "demo_overlay.mp4")}
+
+        if module_name == "cricform.baseline.build_baseline":
+            return {
+                "output_profile_path": str(
+                    output_root / "baselines" / "demo_baseline.json"
+                )
+            }
+
+        if module_name == "cricform.baseline.compare_shot":
+            return {
+                "output_comparison_path": str(
+                    output_root / "reports" / "demo_comparison.json"
+                )
+            }
+
+        if module_name == "cricform.reports.render_report":
+            return {
+                "output_markdown_path": str(output_root / "reports" / "demo_report.md"),
+                "output_chart_path": str(output_root / "reports" / "demo_chart.png"),
+            }
+
+        raise AssertionError(f"Unexpected module: {module_name}")
+
+    summary = build_real_demo_artifacts(
+        pose_audit_csv_path=audit_csv,
+        pose_audit_summary_path=audit_summary,
+        output_root=output_root,
+        overlay_output_dir=overlay_dir,
+        command_runner=fake_runner,
+    )
+
+    assert summary.selected_video_id == "test_pull_pull_0025"
+    assert summary.output_pose_quality_summary_path.endswith(
+        "demo.pose_quality_summary.json"
+    )
+    assert (output_root / "real_demo_summary.json").exists()
