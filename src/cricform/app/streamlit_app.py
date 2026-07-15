@@ -427,7 +427,7 @@ def _render_report(report_path: Path, chart_path: Path | None) -> None:
         st.warning("Markdown report not found. Run `make real-demo` or `make report-sample`.")
         return
 
-    st.markdown(report_path.read_text())
+    st.markdown(clean_report_markdown_for_streamlit(report_path.read_text()))
 
 
 def _render_pose_audit(
@@ -561,6 +561,30 @@ def _render_baseline(baseline_profile: dict[str, Any] | None) -> None:
         )
 
     st.dataframe(pd.DataFrame(rows), use_container_width=True)
+
+
+def clean_report_markdown_for_streamlit(markdown_text: str) -> str:
+    """Remove local Markdown image references already rendered by Streamlit."""
+
+    lines = markdown_text.splitlines()
+    cleaned_lines: list[str] = []
+    skip_blank_after_image = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        if stripped.startswith("![") and "](" in stripped and stripped.endswith(")"):
+            skip_blank_after_image = True
+            continue
+
+        if skip_blank_after_image and stripped == "":
+            skip_blank_after_image = False
+            continue
+
+        skip_blank_after_image = False
+        cleaned_lines.append(line)
+
+    return "\n".join(cleaned_lines).strip() + "\n"
 
 
 def _display_path(path: Path) -> str:

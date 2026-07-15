@@ -8,6 +8,7 @@ import pytest
 from cricform.app.streamlit_app import (
     artifact_paths_for_mode,
     artifact_status,
+    clean_report_markdown_for_streamlit,
     comparison_badge_status,
     key_metric_cards,
     load_csv,
@@ -91,3 +92,22 @@ def test_artifact_paths_for_mode_synthetic() -> None:
 def test_artifact_paths_for_mode_rejects_unknown_mode() -> None:
     with pytest.raises(ValueError, match="Unsupported artifact mode"):
         artifact_paths_for_mode("unknown")
+
+
+def test_clean_report_markdown_for_streamlit_removes_local_image() -> None:
+    markdown = """# Report
+
+## Metric comparison chart
+
+![Shot vs baseline](data/processed/real_demo/reports/chart.png)
+
+## Notes
+
+- Good.
+"""
+
+    cleaned = clean_report_markdown_for_streamlit(markdown)
+
+    assert "![Shot vs baseline]" not in cleaned
+    assert "## Metric comparison chart" in cleaned
+    assert "## Notes" in cleaned
