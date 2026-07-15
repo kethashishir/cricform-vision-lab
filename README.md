@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 15: real cricket sample pose audit.
+Phase 16: real cricket demo artifact pipeline.
 
 The project currently verifies:
 
@@ -75,6 +75,7 @@ The project currently verifies:
 - GitHub Actions CI for linting and tests
 - Public cricket-shot dataset archive audit and sampling
 - Real sampled-video pose detection audit
+- Real cricket demo artifact generation from best audited clip
 
 ## Dataset plan
 
@@ -414,6 +415,22 @@ The audit reports:
     best_video
 
 The pose detection rate measures whether landmarks were available. It is not a coaching-quality, biomechanics, or shot-correctness score.
+
+
+## Real cricket demo artifacts
+
+Build demo-ready artifacts from the best real sampled cricket clip:
+
+    make real-demo
+
+This runs the real pose audit, selects the best detected clip, and generates:
+
+    data/processed/real_demo/real_demo_summary.json
+    data/processed/real_demo/features/
+    data/processed/real_demo/reports/
+    outputs/real_demo/
+
+The generated real demo uses a tiny mixed sample baseline only to demonstrate the reporting pipeline. It is not a cricket coaching standard or biomechanics validation.
 
 ## Roadmap
 
