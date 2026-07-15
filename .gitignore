@@ -51,3 +51,7 @@ models/pose_landmarker/*.task
 
 # Streamlit local state
 .streamlit/
+
+# Downloaded public datasets
+data/raw/datasets/*
+!data/raw/datasets/.gitkeep

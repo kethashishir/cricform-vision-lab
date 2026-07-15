@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 13: tests and GitHub Actions CI.
+Phase 14: public cricket dataset sample audit.
 
 The project currently verifies:
 
@@ -73,6 +73,7 @@ The project currently verifies:
 - Test-shot comparison JSON and Markdown report
 - Streamlit artifact viewer demo UI
 - GitHub Actions CI for linting and tests
+- Public cricket-shot dataset archive audit and sampling
 
 ## Dataset plan
 
@@ -359,6 +360,35 @@ CI runs:
     pytest -q
 
 CI intentionally does not download the full dataset, the MediaPipe model asset, or generated demo artifacts. The test suite uses tiny synthetic fixtures so the workflow stays fast and reproducible.
+
+
+## Public cricket-shot dataset audit
+
+Document the public Hugging Face dataset metadata:
+
+    make dataset-info
+
+Download the public cricket-shot archive:
+
+    make download-cricket-shot
+
+Warning: the archive is large, roughly several GB. It is ignored by Git.
+
+Audit the archive without extracting everything:
+
+    make audit-cricket-shot
+
+Extract a tiny balanced real-video sample from the test split:
+
+    make sample-cricket-shot
+
+This writes sampled videos under:
+
+    data/raw/videos/hf_cricket_shot/
+
+Downloaded archives and extracted video samples are generated data artifacts and should not be committed.
+
+Dataset limitation: this public dataset is designed for cricket shot classification, not validated biomechanics or coaching-grade movement analysis.
 
 ## Roadmap
 

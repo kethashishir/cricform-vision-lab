@@ -18,7 +18,8 @@ dependencies = [
   "opencv-python>=4.9",
   "matplotlib>=3.8",
   "mediapipe==0.10.35",
-  "streamlit>=1.40"
+  "streamlit>=1.40",
+  "huggingface-hub>=0.30"
 ]
 
 [project.optional-dependencies]
