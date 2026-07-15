@@ -177,7 +177,15 @@ def infer_split_and_shot_type(member_name: str) -> tuple[str, str]:
 
 
 def _is_video_file(member_name: str) -> bool:
-    return Path(member_name).suffix.lower() in VIDEO_EXTENSIONS
+    path = Path(member_name)
+
+    if path.name.startswith("._"):
+        return False
+
+    if "__MACOSX" in path.parts:
+        return False
+
+    return path.suffix.lower() in VIDEO_EXTENSIONS
 
 
 def parse_args() -> argparse.Namespace:
