@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 11: test-shot comparison report.
+Phase 12: Streamlit demo UI.
 
 The project currently verifies:
 
@@ -71,6 +71,7 @@ The project currently verifies:
 - Interpretable movement-feature proxies
 - Small empirical baseline profile builder
 - Test-shot comparison JSON and Markdown report
+- Streamlit artifact viewer demo UI
 
 ## Dataset plan
 
@@ -320,6 +321,31 @@ Reports include:
     notes
     honest limitations
     optional metric comparison chart when enough data exists
+
+
+## Streamlit demo UI
+
+Launch the local demo app:
+
+    make app
+
+The app reads generated local artifacts from the sample workflow and displays:
+
+    overlay video
+    Markdown report
+    comparison status
+    pose quality summary
+    phase timeline
+    movement feature table
+    baseline profile
+    artifact status
+
+Before opening the app, generate the sample artifacts:
+
+    make report-sample
+    make overlay-sample
+
+The synthetic sample is expected to show insufficient pose data. That is honest behavior, not a UI failure.
 
 ## Roadmap
 
