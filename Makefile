@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check ci clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app
+.PHONY: setup test lint format check ci clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app dataset-info download-cricket-shot audit-cricket-shot sample-cricket-shot
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -18,6 +18,9 @@ COMPARISON_JSON=$(REPORT_DIR)/synthetic_batting_sample_comparison.json
 REPORT_MD=$(REPORT_DIR)/synthetic_batting_sample_report.md
 REPORT_CHART=outputs/sample_reports/synthetic_batting_sample_metric_comparison.png
 OVERLAY_OUTPUT=outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4
+DATASET_DIR=data/raw/datasets
+CRICKET_SHOT_ARCHIVE=$(DATASET_DIR)/cricketshot.tar.gz
+HF_SAMPLE_DIR=data/raw/videos/hf_cricket_shot
 
 setup:
 	python -m venv .venv
@@ -66,6 +69,18 @@ report-sample: baseline-sample
 	mkdir -p outputs/sample_reports
 	. .venv/bin/activate && python -m cricform.baseline.compare_shot $(MOVEMENT_SUMMARY) $(BASELINE_PROFILE) --shot-type unknown --output-comparison $(COMPARISON_JSON)
 	. .venv/bin/activate && python -m cricform.reports.render_report $(COMPARISON_JSON) --output-markdown $(REPORT_MD) --output-chart $(REPORT_CHART)
+
+dataset-info:
+	. .venv/bin/activate && python -m cricform.ingest.download_dataset --metadata-output $(DATASET_DIR)/cricket_shot_dataset_info.json
+
+download-cricket-shot:
+	. .venv/bin/activate && python -m cricform.ingest.download_dataset --download --output-dir $(DATASET_DIR)
+
+audit-cricket-shot:
+	. .venv/bin/activate && python -m cricform.ingest.sample_dataset $(CRICKET_SHOT_ARCHIVE) --audit-only
+
+sample-cricket-shot:
+	. .venv/bin/activate && python -m cricform.ingest.sample_dataset $(CRICKET_SHOT_ARCHIVE) --output-dir $(HF_SAMPLE_DIR) --split test --samples-per-class 1 --overwrite
 
 app:
 	. .venv/bin/activate && streamlit run src/cricform/app/streamlit_app.py
