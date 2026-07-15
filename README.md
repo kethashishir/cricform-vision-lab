@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 9: movement feature extraction.
+Phase 10: baseline builder.
 
 The project currently verifies:
 
@@ -69,6 +69,7 @@ The project currently verifies:
 - Annotated pose overlay video generation
 - Rule-based batting phase timeline detection
 - Interpretable movement-feature proxies
+- Small empirical baseline profile builder
 
 ## Dataset plan
 
@@ -272,6 +273,28 @@ Current movement proxies include:
     follow_through_height_proxy
 
 These are 2D pose-derived proxies. They are not validated biomechanics, coaching-grade metrics, or injury-risk assessments.
+
+
+## Baseline builder
+
+Build a small empirical baseline profile from movement-feature CSVs:
+
+    make baseline-sample
+
+This writes:
+
+    data/processed/baselines/synthetic_baseline_manifest.csv
+    data/processed/baselines/synthetic_baseline_profile.json
+
+The baseline manifest has columns:
+
+    shot_id
+    shot_type
+    movement_features_csv
+
+The baseline profile groups usable shots by shot_type and computes simple mean, standard deviation, min, max, and count statistics for movement-feature proxies.
+
+The synthetic sample usually has no usable pose landmarks, so the generated sample baseline will show zero usable shots. That is acceptable for the smoke workflow. Real baselines require real pose-detected clips.
 
 ## Roadmap
 
