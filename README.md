@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 4: MediaPipe pose extraction.
+Phase 5: landmark schema and Parquet storage.
 
 The project currently verifies:
 
@@ -62,6 +62,8 @@ The project currently verifies:
 - Video metadata inspection
 - Deterministic frame extraction
 - MediaPipe Pose Landmarker smoke workflow
+- Tidy landmark schema
+- Parquet landmark storage
 
 ## Dataset plan
 
@@ -147,6 +149,37 @@ This writes:
     data/interim/pose_landmarks/synthetic_batting_sample.pose.jsonl
 
 Important: the synthetic stick-figure video may produce zero detected poses. That is not a pipeline failure. It only proves the MediaPipe video-processing path runs. Real pose-quality evaluation requires real human batting footage.
+
+
+## Landmark schema and Parquet
+
+Convert pose JSONL into a tidy landmark table:
+
+    make landmarks-sample
+
+This writes:
+
+    data/interim/pose_landmarks/synthetic_batting_sample.landmarks.parquet
+
+The table uses one row per landmark per frame per coordinate space.
+
+Expected columns include:
+
+    video_id
+    source_video_path
+    frame_index
+    timestamp_ms
+    pose_index
+    coordinate_space
+    landmark_index
+    landmark_name
+    x
+    y
+    z
+    visibility
+    presence
+
+The synthetic stick-figure sample may produce an empty Parquet table because MediaPipe may detect zero human poses. That is acceptable for the smoke workflow.
 
 ## Roadmap
 

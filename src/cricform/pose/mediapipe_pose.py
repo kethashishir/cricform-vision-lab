@@ -183,7 +183,7 @@ def _landmarks_to_records(landmarks: list[Any]) -> list[dict[str, float | None]]
     for landmark_index, landmark in enumerate(landmarks):
         records.append(
             {
-                "landmark_index": float(landmark_index),
+                "landmark_index": landmark_index,
                 "x": _as_optional_float(getattr(landmark, "x", None)),
                 "y": _as_optional_float(getattr(landmark, "y", None)),
                 "z": _as_optional_float(getattr(landmark, "z", None)),
