@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 3: frame extraction and video metadata.
+Phase 4: MediaPipe pose extraction.
 
 The project currently verifies:
 
@@ -61,6 +61,7 @@ The project currently verifies:
 - Synthetic local video fixture generation
 - Video metadata inspection
 - Deterministic frame extraction
+- MediaPipe Pose Landmarker smoke workflow
 
 ## Dataset plan
 
@@ -129,6 +130,23 @@ This writes frames to:
     data/interim/frames/synthetic_batting_sample/
 
 Extracted frames are generated artifacts and should not be committed.
+
+
+## Pose extraction
+
+Download the MediaPipe Pose Landmarker model:
+
+    make download-pose-model
+
+Run pose extraction on the synthetic sample video:
+
+    make pose-sample
+
+This writes:
+
+    data/interim/pose_landmarks/synthetic_batting_sample.pose.jsonl
+
+Important: the synthetic stick-figure video may produce zero detected poses. That is not a pipeline failure. It only proves the MediaPipe video-processing path runs. Real pose-quality evaluation requires real human batting footage.
 
 ## Roadmap
 

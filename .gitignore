@@ -44,3 +44,7 @@ outputs/sample_overlays/*
 
 # Logs
 *.log
+
+# Model artifacts
+models/pose_landmarker/*.task
+!models/pose_landmarker/.gitkeep
