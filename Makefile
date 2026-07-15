@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample
+.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -9,9 +9,14 @@ LANDMARK_PARQUET=data/interim/pose_landmarks/synthetic_batting_sample.landmarks.
 FEATURE_OUTPUT_DIR=data/processed/features
 PHASE_TIMELINE=data/processed/features/synthetic_batting_sample.phase_timeline.csv
 MOVEMENT_FEATURES=data/processed/features/synthetic_batting_sample.movement_features.csv
+MOVEMENT_SUMMARY=data/processed/features/synthetic_batting_sample.movement_summary.json
 BASELINE_DIR=data/processed/baselines
 BASELINE_MANIFEST=$(BASELINE_DIR)/synthetic_baseline_manifest.csv
 BASELINE_PROFILE=$(BASELINE_DIR)/synthetic_baseline_profile.json
+REPORT_DIR=data/processed/reports
+COMPARISON_JSON=$(REPORT_DIR)/synthetic_batting_sample_comparison.json
+REPORT_MD=$(REPORT_DIR)/synthetic_batting_sample_report.md
+REPORT_CHART=outputs/sample_reports/synthetic_batting_sample_metric_comparison.png
 OVERLAY_OUTPUT=outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4
 
 setup:
@@ -55,6 +60,12 @@ baseline-sample: movement-features-sample
 	mkdir -p $(BASELINE_DIR)
 	printf "shot_id,shot_type,movement_features_csv\nsynthetic_batting_sample,unknown,../features/synthetic_batting_sample.movement_features.csv\n" > $(BASELINE_MANIFEST)
 	. .venv/bin/activate && python -m cricform.baseline.build_baseline $(BASELINE_MANIFEST) --output-profile $(BASELINE_PROFILE)
+
+report-sample: baseline-sample
+	mkdir -p $(REPORT_DIR)
+	mkdir -p outputs/sample_reports
+	. .venv/bin/activate && python -m cricform.baseline.compare_shot $(MOVEMENT_SUMMARY) $(BASELINE_PROFILE) --shot-type unknown --output-comparison $(COMPARISON_JSON)
+	. .venv/bin/activate && python -m cricform.reports.render_report $(COMPARISON_JSON) --output-markdown $(REPORT_MD) --output-chart $(REPORT_CHART)
 
 test:
 	. .venv/bin/activate && pytest -q
