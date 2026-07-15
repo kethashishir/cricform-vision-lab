@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample
+.PHONY: setup test lint format check clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -39,6 +39,9 @@ pose-quality-sample: pose-sample
 
 overlay-sample: pose-sample
 	. .venv/bin/activate && python -m cricform.video.overlay $(SAMPLE_VIDEO) $(POSE_OUTPUT) --output-video $(OVERLAY_OUTPUT)
+
+phase-sample: landmarks-sample
+	. .venv/bin/activate && python -m cricform.phases.detect_phases $(LANDMARK_PARQUET) --output-dir $(FEATURE_OUTPUT_DIR)
 
 test:
 	. .venv/bin/activate && pytest -q

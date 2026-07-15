@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 7: pose overlay video generation.
+Phase 8: rule-based batting phase detection.
 
 The project currently verifies:
 
@@ -67,6 +67,7 @@ The project currently verifies:
 - Frame-level pose quality scoring
 - Video-level pose quality summary
 - Annotated pose overlay video generation
+- Rule-based batting phase timeline detection
 
 ## Dataset plan
 
@@ -222,6 +223,30 @@ This writes:
 The overlay draws detected pose landmarks when available and labels frames where pose was not sampled or no pose was detected.
 
 For the synthetic sample, MediaPipe usually detects zero poses. That is expected. The overlay still proves that the project can generate visual audit artifacts and communicate pose failure clearly.
+
+
+## Rule-based phase detection
+
+Detect a transparent batting phase timeline from landmark Parquet:
+
+    make phase-sample
+
+This writes:
+
+    data/processed/features/synthetic_batting_sample.phase_timeline.csv
+    data/processed/features/synthetic_batting_sample.phase_summary.json
+
+Phase labels include:
+
+    stance
+    backlift
+    downswing
+    contact_zone
+    follow_through
+    recovery
+    unavailable
+
+The current detector is a heuristic based on wrist/hand motion proxies. It is not validated against expert cricket annotations and must not be described as coaching-grade.
 
 ## Roadmap
 
