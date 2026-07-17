@@ -9,12 +9,12 @@ from cricform.pipeline.real_demo import (
     _parse_json_from_stdout,
     build_real_demo_artifacts,
     select_best_pose_audit_row,
-    write_mixed_real_sample_manifest,
+    write_real_sample_baseline_manifest,
 )
 
 
 def test_parse_json_from_stdout_with_logs() -> None:
-    stdout = "INFO something happened\n{\"ok\": true, \"value\": 3}\n"
+    stdout = 'INFO something happened\n{"ok": true, "value": 3}\n'
 
     assert _parse_json_from_stdout(stdout) == {"ok": True, "value": 3}
 
@@ -90,35 +90,95 @@ def test_select_best_pose_audit_row_falls_back_to_csv(tmp_path: Path) -> None:
     assert selected["video_id"] == "pull"
 
 
-def test_write_mixed_real_sample_manifest(tmp_path: Path) -> None:
+def test_write_real_sample_baseline_manifest_uses_per_video_features(
+    tmp_path: Path,
+) -> None:
     audit_csv = tmp_path / "pose_audit.csv"
     manifest_path = tmp_path / "baselines" / "manifest.csv"
-    feature_csv = tmp_path / "features" / "movement.csv"
+    baseline_feature_dir = tmp_path / "baselines" / "real_sample_features"
+    known_feature_csv = tmp_path / "features" / "pull_selected.movement_features.csv"
+    cover_pose_jsonl = tmp_path / "pose" / "cover.pose.jsonl"
+    pull_pose_jsonl = tmp_path / "pose" / "pull.pose.jsonl"
+
+    known_feature_csv.parent.mkdir(parents=True)
+    known_feature_csv.write_text("frame_index,value\n0,1\n")
+    cover_pose_jsonl.parent.mkdir(parents=True)
+    cover_pose_jsonl.write_text("")
+    pull_pose_jsonl.write_text("")
 
     pd.DataFrame(
         [
-            {"video_id": "cover", "status": "pose_detected"},
-            {"video_id": "pull", "status": "pose_detected"},
-            {"video_id": "failed", "status": "failed"},
+            {
+                "video_id": "cover",
+                "status": "pose_detected",
+                "output_jsonl_path": str(cover_pose_jsonl),
+            },
+            {
+                "video_id": "pull",
+                "status": "pose_detected",
+                "output_jsonl_path": str(pull_pose_jsonl),
+            },
+            {
+                "video_id": "failed",
+                "status": "failed",
+                "output_jsonl_path": "",
+            },
         ]
     ).to_csv(audit_csv, index=False)
 
-    feature_csv.parent.mkdir(parents=True)
-    feature_csv.write_text("frame_index,value\n0,1\n")
+    called_modules: list[str] = []
 
-    count = write_mixed_real_sample_manifest(
+    def fake_runner(command: list[str]) -> dict[str, str]:
+        module_name = command[command.index("-m") + 1]
+        called_modules.append(module_name)
+
+        if module_name == "cricform.pose.landmark_schema":
+            output_path = Path(command[command.index("--output-parquet") + 1])
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text("")
+            return {"output_parquet_path": str(output_path)}
+
+        if module_name == "cricform.phases.detect_phases":
+            output_dir = Path(command[command.index("--output-dir") + 1])
+            input_stem = Path(command[3]).stem
+            return {
+                "output_phase_csv_path": str(output_dir / f"{input_stem}.phase_timeline.csv"),
+                "output_summary_json_path": str(output_dir / f"{input_stem}.phase_summary.json"),
+            }
+
+        if module_name == "cricform.features.motion_features":
+            output_dir = Path(command[command.index("--output-dir") + 1])
+            input_stem = Path(command[3]).stem
+            return {
+                "output_features_csv_path": str(output_dir / f"{input_stem}.movement_features.csv"),
+                "output_summary_json_path": str(output_dir / f"{input_stem}.movement_summary.json"),
+            }
+
+        raise AssertionError(f"Unexpected module: {module_name}")
+
+    count = write_real_sample_baseline_manifest(
         pose_audit_csv_path=audit_csv,
         baseline_manifest_path=manifest_path,
-        feature_csv_path=feature_csv,
+        baseline_feature_dir=baseline_feature_dir,
+        command_runner=fake_runner,
+        known_feature_paths={"pull": known_feature_csv},
     )
 
     manifest = pd.read_csv(manifest_path)
+    feature_paths = set(manifest["movement_features_csv"])
 
     assert count == 2
     assert len(manifest) == 2
     assert set(manifest["shot_id"]) == {"cover", "pull"}
     assert set(manifest["shot_type"]) == {"real_sample_mixed"}
-    assert set(manifest["movement_features_csv"]) == {"../features/movement.csv"}
+    assert len(feature_paths) == 2
+    assert "../features/pull_selected.movement_features.csv" in feature_paths
+    assert any(path.startswith("real_sample_features/cover.landmarks") for path in feature_paths)
+    assert called_modules == [
+        "cricform.pose.landmark_schema",
+        "cricform.phases.detect_phases",
+        "cricform.features.motion_features",
+    ]
 
 
 def test_build_real_demo_artifacts_accepts_quality_output_summary_path(
@@ -170,9 +230,7 @@ def test_build_real_demo_artifacts_accepts_quality_output_summary_path(
 
         if module_name == "cricform.phases.detect_phases":
             return {
-                "output_phase_csv_path": str(
-                    output_root / "features" / "demo.phase_timeline.csv"
-                ),
+                "output_phase_csv_path": str(output_root / "features" / "demo.phase_timeline.csv"),
                 "output_summary_json_path": str(
                     output_root / "features" / "demo.phase_summary.json"
                 ),
@@ -192,18 +250,10 @@ def test_build_real_demo_artifacts_accepts_quality_output_summary_path(
             return {"output_video_path": str(overlay_dir / "demo_overlay.mp4")}
 
         if module_name == "cricform.baseline.build_baseline":
-            return {
-                "output_profile_path": str(
-                    output_root / "baselines" / "demo_baseline.json"
-                )
-            }
+            return {"output_profile_path": str(output_root / "baselines" / "demo_baseline.json")}
 
         if module_name == "cricform.baseline.compare_shot":
-            return {
-                "output_comparison_path": str(
-                    output_root / "reports" / "demo_comparison.json"
-                )
-            }
+            return {"output_comparison_path": str(output_root / "reports" / "demo_comparison.json")}
 
         if module_name == "cricform.reports.render_report":
             return {
@@ -222,7 +272,5 @@ def test_build_real_demo_artifacts_accepts_quality_output_summary_path(
     )
 
     assert summary.selected_video_id == "test_pull_pull_0025"
-    assert summary.output_pose_quality_summary_path.endswith(
-        "demo.pose_quality_summary.json"
-    )
+    assert summary.output_pose_quality_summary_path.endswith("demo.pose_quality_summary.json")
     assert (output_root / "real_demo_summary.json").exists()
