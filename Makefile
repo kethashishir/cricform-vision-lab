@@ -1,4 +1,4 @@
-.PHONY: setup test lint format check ci clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app dataset-info download-cricket-shot audit-cricket-shot sample-cricket-shot real-pose-audit real-demo
+.PHONY: setup test lint format check ci clean sample-video video-info extract-frames download-pose-model pose-sample landmarks-sample pose-quality-sample overlay-sample phase-sample movement-features-sample baseline-sample report-sample app dataset-info download-cricket-shot audit-cricket-shot sample-cricket-shot real-pose-audit real-demo slow-real-demo
 
 SAMPLE_VIDEO=data/raw/videos/synthetic_batting_sample.mp4
 POSE_MODEL_DIR=models/pose_landmarker
@@ -25,6 +25,8 @@ REAL_AUDIT_OUTPUT_DIR=data/processed/real_sample_pose_audit
 REAL_AUDIT_JSONL_DIR=data/interim/pose_landmarks/real_samples
 REAL_DEMO_OUTPUT_DIR=data/processed/real_demo
 REAL_DEMO_OVERLAY_DIR=outputs/real_demo
+REAL_DEMO_OVERLAY=outputs/real_demo/test_pull_pull_0025_pose_overlay.mp4
+REAL_DEMO_SLOW_OVERLAY=outputs/real_demo/test_pull_pull_0025_pose_overlay_slow.mp4
 
 setup:
 	python -m venv .venv
@@ -102,6 +104,12 @@ real-demo: real-pose-audit
 		--pose-audit-summary $(REAL_AUDIT_OUTPUT_DIR)/pose_audit_summary.json \
 		--output-root $(REAL_DEMO_OUTPUT_DIR) \
 		--overlay-output-dir $(REAL_DEMO_OVERLAY_DIR)
+
+slow-real-demo: real-demo
+	. .venv/bin/activate && python -m cricform.video.slow_video \
+		$(REAL_DEMO_OVERLAY) \
+		--output-video $(REAL_DEMO_SLOW_OVERLAY) \
+		--slow-factor 3
 
 app:
 	. .venv/bin/activate && streamlit run src/cricform/app/streamlit_app.py
