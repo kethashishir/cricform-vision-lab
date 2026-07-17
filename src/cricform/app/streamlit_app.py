@@ -149,6 +149,12 @@ REAL_DEMO_ARTIFACT_PATHS = {
     / "real_demo"
     / "baselines"
     / "real_demo_baseline_profile.json",
+    "baseline_manifest": PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "real_demo"
+    / "baselines"
+    / "real_demo_baseline_manifest.csv",
 }
 
 
@@ -210,6 +216,34 @@ def comparison_badge_status(comparison: dict[str, Any] | None) -> str:
     return str(comparison.get("comparison_status", "unknown"))
 
 
+def baseline_manifest_evidence(manifest_path: Path) -> dict[str, Any]:
+    """Summarize whether the baseline uses distinct movement feature files."""
+
+    manifest = load_csv(manifest_path)
+
+    if manifest.empty:
+        return {
+            "status": "missing_or_empty",
+            "manifest_rows": 0,
+            "unique_movement_feature_paths": 0,
+        }
+
+    if "movement_features_csv" not in manifest.columns:
+        return {
+            "status": "missing_movement_features_csv",
+            "manifest_rows": len(manifest),
+            "unique_movement_feature_paths": 0,
+        }
+
+    return {
+        "status": "ok",
+        "manifest_rows": len(manifest),
+        "unique_movement_feature_paths": int(
+            manifest["movement_features_csv"].dropna().nunique()
+        ),
+    }
+
+
 def key_metric_cards(
     comparison: dict[str, Any] | None,
     quality_summary: dict[str, Any] | None,
@@ -263,14 +297,21 @@ def app() -> None:
     baseline_profile = load_json(paths["baseline_profile"])
     real_demo_summary = load_json(paths.get("real_demo_summary", Path("__missing__")))
     pose_audit_summary = load_json(paths.get("pose_audit_summary", Path("__missing__")))
+    baseline_evidence = baseline_manifest_evidence(
+        paths.get("baseline_manifest", Path("__missing__"))
+    )
 
     cards = key_metric_cards(comparison, quality_summary, movement_summary)
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Comparison status", cards["comparison_status"])
     col2.metric("Usable motion frames", cards["usable_motion_frames"])
     col3.metric("Pose detection rate", _display_pose_detection_rate(cards, real_demo_summary))
     col4.metric("Mean frame quality", cards["mean_frame_quality"])
+    col5.metric(
+        "Unique baseline feature files",
+        str(baseline_evidence["unique_movement_feature_paths"]),
+    )
 
     if mode == "real":
         st.success(
@@ -304,6 +345,7 @@ def app() -> None:
             phase_summary=phase_summary,
             movement_summary=movement_summary,
             real_demo_summary=real_demo_summary,
+            baseline_evidence=baseline_evidence,
         )
 
     with tabs[1]:
@@ -329,7 +371,11 @@ def app() -> None:
         _render_movement(paths["movement_summary"], paths["movement_features_csv"])
 
     with tabs[7]:
-        _render_baseline(baseline_profile)
+        _render_baseline(
+            baseline_profile=baseline_profile,
+            baseline_manifest_path=paths.get("baseline_manifest"),
+            baseline_evidence=baseline_evidence,
+        )
 
     with tabs[8]:
         st.subheader("Artifact status")
@@ -365,6 +411,7 @@ def _render_overview(
     phase_summary: dict[str, Any] | None,
     movement_summary: dict[str, Any] | None,
     real_demo_summary: dict[str, Any] | None,
+    baseline_evidence: dict[str, Any],
 ) -> None:
     st.subheader("Pipeline overview")
 
@@ -378,6 +425,10 @@ def _render_overview(
                     "selected_pose_detection_rate"
                 ),
                 "baseline_video_count": real_demo_summary.get("baseline_video_count"),
+                "unique_baseline_feature_files": baseline_evidence.get(
+                    "unique_movement_feature_paths"
+                ),
+                "baseline_manifest_status": baseline_evidence.get("status"),
                 "limitation": real_demo_summary.get("limitation"),
             }
         )
@@ -535,13 +586,26 @@ def _render_movement(summary_path: Path, csv_path: Path) -> None:
         st.line_chart(movement_df.set_index("frame_index")[chart_columns])
 
 
-def _render_baseline(baseline_profile: dict[str, Any] | None) -> None:
+def _render_baseline(
+    baseline_profile: dict[str, Any] | None,
+    baseline_manifest_path: Path | None,
+    baseline_evidence: dict[str, Any],
+) -> None:
     st.subheader("Baseline profile")
+
+    st.markdown("### Baseline evidence")
+    st.json(baseline_evidence)
+
+    if baseline_manifest_path is not None:
+        manifest = load_csv(baseline_manifest_path)
+        if not manifest.empty:
+            st.dataframe(manifest, use_container_width=True)
 
     if baseline_profile is None:
         st.warning("Baseline profile not found.")
         return
 
+    st.markdown("### Baseline summary")
     st.json(
         {
             "baseline_version": baseline_profile.get("baseline_version"),

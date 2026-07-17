@@ -7,6 +7,7 @@ import pytest
 
 from cricform.app.streamlit_app import (
     artifact_paths_for_mode,
+    baseline_manifest_evidence,
     artifact_status,
     clean_report_markdown_for_streamlit,
     comparison_badge_status,
@@ -57,6 +58,34 @@ def test_comparison_badge_status() -> None:
     )
 
 
+def test_baseline_manifest_evidence_counts_unique_feature_paths(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "manifest.csv"
+    manifest_path.write_text(
+        "shot_id,shot_type,movement_features_csv\n"
+        "a,real_sample_mixed,features/a.csv\n"
+        "b,real_sample_mixed,features/b.csv\n"
+        "c,real_sample_mixed,features/b.csv\n"
+    )
+
+    evidence = baseline_manifest_evidence(manifest_path)
+
+    assert evidence == {
+        "status": "ok",
+        "manifest_rows": 3,
+        "unique_movement_feature_paths": 2,
+    }
+
+
+def test_baseline_manifest_evidence_handles_missing_file(tmp_path: Path) -> None:
+    evidence = baseline_manifest_evidence(tmp_path / "missing.csv")
+
+    assert evidence == {
+        "status": "missing_or_empty",
+        "manifest_rows": 0,
+        "unique_movement_feature_paths": 0,
+    }
+
+
 def test_key_metric_cards() -> None:
     cards = key_metric_cards(
         comparison={"comparison_status": "comparison_available", "usable_motion_frames": 12},
@@ -81,6 +110,9 @@ def test_artifact_paths_for_mode_real() -> None:
     )
     assert paths["real_demo_summary"].as_posix().endswith(
         "data/processed/real_demo/real_demo_summary.json"
+    )
+    assert paths["baseline_manifest"].as_posix().endswith(
+        "data/processed/real_demo/baselines/real_demo_baseline_manifest.csv"
     )
 
 
