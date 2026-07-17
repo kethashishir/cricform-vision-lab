@@ -94,9 +94,7 @@ def build_real_demo_artifacts(
         raise FileNotFoundError(f"Selected video does not exist: {selected_video_path}")
 
     if not selected_pose_jsonl_path.exists():
-        raise FileNotFoundError(
-            f"Selected pose JSONL does not exist: {selected_pose_jsonl_path}"
-        )
+        raise FileNotFoundError(f"Selected pose JSONL does not exist: {selected_pose_jsonl_path}")
 
     pose_dir = output_root / "pose"
     feature_dir = output_root / "features"
@@ -170,10 +168,15 @@ def build_real_demo_artifacts(
     baseline_manifest_path = baseline_dir / "real_demo_baseline_manifest.csv"
     baseline_profile_path = baseline_dir / "real_demo_baseline_profile.json"
 
-    baseline_video_count = write_mixed_real_sample_manifest(
+    baseline_feature_dir = baseline_dir / "real_sample_features"
+    baseline_video_count = write_real_sample_baseline_manifest(
         pose_audit_csv_path=pose_audit_csv_path,
         baseline_manifest_path=baseline_manifest_path,
-        feature_csv_path=Path(str(movement_summary["output_features_csv_path"])),
+        baseline_feature_dir=baseline_feature_dir,
+        command_runner=runner,
+        known_feature_paths={
+            selected_video_id: Path(str(movement_summary["output_features_csv_path"]))
+        },
     )
 
     baseline_summary = runner(
@@ -251,7 +254,7 @@ def build_real_demo_artifacts(
         baseline_video_count=baseline_video_count,
         limitation=(
             "Real demo artifacts are generated from sampled public cricket clips. "
-            "The mixed baseline is tiny and exists to demonstrate pipeline behavior. "
+            "The mixed real-sample baseline is tiny and exists to demonstrate pipeline behavior. "
             "It is not a coaching standard, population norm, biomechanics validation, "
             "medical assessment, or shot-correctness score."
         ),
@@ -263,23 +266,82 @@ def build_real_demo_artifacts(
     return summary
 
 
-def write_mixed_real_sample_manifest(
+def write_real_sample_baseline_manifest(
     pose_audit_csv_path: Path,
     baseline_manifest_path: Path,
-    feature_csv_path: Path,
+    baseline_feature_dir: Path,
+    command_runner: CommandRunner,
+    known_feature_paths: dict[str, Path] | None = None,
 ) -> int:
-    """Write a small manifest for a mixed real-sample demo baseline."""
+    """Write a mixed real-sample baseline using per-video movement features."""
 
     dataframe = pd.read_csv(pose_audit_csv_path)
     usable = dataframe[dataframe["status"] == "pose_detected"].copy()
 
     baseline_manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    baseline_feature_dir.mkdir(parents=True, exist_ok=True)
 
+    known_paths = known_feature_paths or {}
     rows = []
+
     for _, row in usable.iterrows():
+        video_id = str(row["video_id"])
+
+        if video_id in known_paths:
+            feature_csv_path = known_paths[video_id]
+        else:
+            pose_jsonl_value = row.get("output_jsonl_path")
+            if pd.isna(pose_jsonl_value):
+                raise ValueError(f"Pose audit row for {video_id} is missing output_jsonl_path.")
+
+            pose_jsonl_path = Path(str(pose_jsonl_value))
+            if not pose_jsonl_path.exists():
+                raise FileNotFoundError(
+                    f"Pose JSONL for baseline video does not exist: {pose_jsonl_path}"
+                )
+
+            landmark_parquet_path = baseline_feature_dir / (f"{video_id}.landmarks.parquet")
+
+            command_runner(
+                [
+                    sys.executable,
+                    "-m",
+                    "cricform.pose.landmark_schema",
+                    str(pose_jsonl_path),
+                    "--output-parquet",
+                    str(landmark_parquet_path),
+                ]
+            )
+
+            phase_summary = command_runner(
+                [
+                    sys.executable,
+                    "-m",
+                    "cricform.phases.detect_phases",
+                    str(landmark_parquet_path),
+                    "--output-dir",
+                    str(baseline_feature_dir),
+                ]
+            )
+
+            movement_summary = command_runner(
+                [
+                    sys.executable,
+                    "-m",
+                    "cricform.features.motion_features",
+                    str(landmark_parquet_path),
+                    "--phase-timeline-csv",
+                    str(phase_summary["output_phase_csv_path"]),
+                    "--output-dir",
+                    str(baseline_feature_dir),
+                ]
+            )
+
+            feature_csv_path = Path(str(movement_summary["output_features_csv_path"]))
+
         rows.append(
             {
-                "shot_id": row["video_id"],
+                "shot_id": video_id,
                 "shot_type": "real_sample_mixed",
                 "movement_features_csv": _relative_or_absolute(
                     feature_csv_path,
@@ -288,7 +350,11 @@ def write_mixed_real_sample_manifest(
             }
         )
 
-    pd.DataFrame(rows).to_csv(baseline_manifest_path, index=False)
+    pd.DataFrame(
+        rows,
+        columns=["shot_id", "shot_type", "movement_features_csv"],
+    ).to_csv(baseline_manifest_path, index=False)
+
     return len(rows)
 
 
