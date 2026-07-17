@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 17: Streamlit real demo integration.
+Phase 18: slow-motion demo overlay export.
 
 The project currently verifies:
 
@@ -77,6 +77,7 @@ The project currently verifies:
 - Real sampled-video pose detection audit
 - Real cricket demo artifact generation from best audited clip
 - Streamlit real demo mode for visualizing real cricket artifacts
+- Slow-motion presentation overlay for easier demo viewing
 
 ## Dataset plan
 
@@ -433,6 +434,19 @@ This runs the real pose audit, selects the best detected clip, and generates:
     outputs/real_demo/
 
 The generated real demo uses a tiny mixed sample baseline only to demonstrate the reporting pipeline. It is not a cricket coaching standard or biomechanics validation.
+
+
+## Slow-motion demo overlay
+
+Create a slower presentation copy of the real overlay video:
+
+    make slow-real-demo
+
+This writes:
+
+    outputs/real_demo/test_pull_pull_0025_pose_overlay_slow.mp4
+
+The slow overlay is for viewing only. It does not change pose timestamps, movement features, phase labels, baseline comparison, or any analysis result.
 
 ## Roadmap
 
