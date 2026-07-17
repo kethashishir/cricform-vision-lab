@@ -69,6 +69,10 @@ REAL_DEMO_ARTIFACT_PATHS = {
     "overlay_video": PROJECT_ROOT
     / "outputs"
     / "real_demo"
+    / "test_pull_pull_0025_pose_overlay_slow.mp4",
+    "original_overlay_video": PROJECT_ROOT
+    / "outputs"
+    / "real_demo"
     / "test_pull_pull_0025_pose_overlay.mp4",
     "report_markdown": PROJECT_ROOT
     / "data"
@@ -271,7 +275,7 @@ def app() -> None:
     if mode == "real":
         st.success(
             "Real demo mode uses the best sampled cricket clip from the pose audit. "
-            "Run `make real-demo` if artifacts are missing."
+            "Run `make slow-real-demo` if artifacts are missing."
         )
     else:
         st.info(
@@ -410,7 +414,10 @@ def _render_overlay(video_path: Path) -> None:
     st.subheader("Pose overlay video")
 
     if not video_path.exists():
-        st.warning("Overlay video not found. Run `make real-demo` or `make overlay-sample`.")
+        st.warning(
+            "Overlay video not found. Run `make slow-real-demo` for real mode "
+            "or `make overlay-sample` for synthetic mode."
+        )
         return
 
     st.video(str(video_path))
