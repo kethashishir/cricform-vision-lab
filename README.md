@@ -6,7 +6,22 @@ It takes a cricket batting video, extracts pose landmarks, audits pose quality, 
 
 ## One-sentence pitch
 
-Build a system that takes a cricket batting video, extracts pose landmarks, detects batting phases, computes interpretable movement features, compares the shot against a small baseline, and produces a visual report with overlays, timelines, quality checks, and honest limitations.
+A reproducible cricket computer-vision lab that audits pose quality on real batting clips, selects the best demo sample, computes interpretable movement proxies, and visualizes the result with reports, charts, overlays, and honest limitations.
+
+## Demo snapshot
+
+Current real demo candidate:
+
+```text
+selected_video_id: test_pull_pull_0025
+selected_shot_type: pull
+selected_pose_detection_rate: 0.5714
+comparison_status: comparison_available
+usable_motion_frames: 4
+baseline_video_count: 10
+```
+
+The Streamlit app defaults to the real cricket demo and uses a slow-motion overlay so the skeleton is easier to inspect.
 
 ## What this project is
 
@@ -24,28 +39,27 @@ This is a portfolio-grade computer-vision and feature-engineering project focuse
 
 This is not a professional biomechanics product.
 
-This is not medical, injury, or coaching-grade advice.
+This is not medical, injury-risk, or coaching-grade advice.
 
 This does not claim validated cricket coaching accuracy.
 
 This does not make expert claims unless future validation is performed with expert-labeled data.
 
-## Planned pipeline
+## Pipeline overview
 
 1. Ingest or sample cricket shot videos.
-2. Extract frames.
-3. Run pose extraction.
-4. Store landmarks in a clean schema.
+2. Extract frames or process video directly.
+3. Run MediaPipe pose extraction.
+4. Store landmarks in JSONL and tidy Parquet formats.
 5. Compute pose quality metrics.
-6. Smooth landmarks where appropriate.
-7. Detect batting phases with rule-based logic first.
-8. Compute interpretable movement features.
-9. Build small baseline profiles by shot type.
-10. Compare a test shot against baseline.
-11. Generate annotated video overlay.
-12. Generate visual report.
-13. Build Streamlit demo.
-14. Add tests, CI, screenshots, and portfolio polish.
+6. Detect rough batting phases with rule-based heuristics.
+7. Compute interpretable movement-proxy features.
+8. Build a small empirical baseline.
+9. Compare a selected shot against the baseline.
+10. Generate annotated overlay videos.
+11. Generate Markdown reports and metric charts.
+12. Display artifacts in Streamlit.
+13. Protect the workflow with tests, linting, and GitHub Actions CI.
 
 ## Current status
 
