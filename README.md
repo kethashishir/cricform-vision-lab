@@ -49,7 +49,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 18: slow-motion demo overlay export.
+Phase 19: Streamlit slow overlay default.
 
 The project currently verifies:
 
@@ -78,6 +78,7 @@ The project currently verifies:
 - Real cricket demo artifact generation from best audited clip
 - Streamlit real demo mode for visualizing real cricket artifacts
 - Slow-motion presentation overlay for easier demo viewing
+- Streamlit defaults to the slow real overlay for clearer demos
 
 ## Dataset plan
 
@@ -335,13 +336,13 @@ Launch the local demo app:
 
     make app
 
-The app defaults to real cricket demo mode. Before opening it, generate real demo artifacts:
+The app defaults to real cricket demo mode. Before opening it, generate the slow real demo artifacts:
 
-    make real-demo
+    make slow-real-demo
 
 The app displays:
 
-    real overlay video
+    slow real overlay video
     Markdown report
     metric comparison chart
     comparison status

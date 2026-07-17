@@ -74,6 +74,9 @@ def test_artifact_paths_for_mode_real() -> None:
     paths = artifact_paths_for_mode("real")
 
     assert paths["overlay_video"].as_posix().endswith(
+        "outputs/real_demo/test_pull_pull_0025_pose_overlay_slow.mp4"
+    )
+    assert paths["original_overlay_video"].as_posix().endswith(
         "outputs/real_demo/test_pull_pull_0025_pose_overlay.mp4"
     )
     assert paths["real_demo_summary"].as_posix().endswith(
