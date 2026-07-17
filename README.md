@@ -107,6 +107,12 @@ Known risks:
 - Dataset access and file format must be verified locally before pipeline assumptions are made.
 - Public video provenance and license limitations must be documented honestly.
 
+## Demo walkthrough
+
+For interview/demo talking points, see:
+
+    docs/demo_walkthrough.md
+
 ## Environment
 
 Use Python 3.12.
