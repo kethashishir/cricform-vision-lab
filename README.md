@@ -63,7 +63,7 @@ This does not make expert claims unless future validation is performed with expe
 
 ## Current status
 
-Phase 19: Streamlit slow overlay default.
+v0.1.1: public real-demo milestone with Streamlit baseline evidence, release assets, and CI.
 
 The project currently verifies:
 
@@ -489,6 +489,6 @@ The slow overlay is for viewing only. It does not change pose timestamps, moveme
 
 ## License
 
-To be decided.
+This project code is released under the MIT License. See `LICENSE`.
 
-Dataset licenses and sample-video provenance will be documented separately.
+The MIT License applies to this repository's source code only. Third-party cricket videos, downloaded datasets, MediaPipe model assets, and generated artifacts are governed by their own upstream licenses, terms, or provenance. They are not redistributed as part of the Git-tracked source tree.
