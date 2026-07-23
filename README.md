@@ -485,8 +485,19 @@ The slow overlay is for viewing only. It does not change pose timestamps, moveme
 - Phase 11: test-shot comparison report
 - Phase 12: Streamlit app
 - Phase 13: tests and CI
-- Phase 14: README, screenshots, demo GIF, LinkedIn post, resume bullets
-
+- Phase 14: public cricket-shot dataset audit and sampling
+- Phase 15: real sampled-video pose audit
+- Phase 16: real cricket demo artifact pipeline
+- Phase 17: Streamlit real demo mode
+- Phase 18: slow-motion demo overlay export
+- Phase 19: Streamlit slow overlay default
+- Phase 20: README portfolio polish
+- Phase 21: demo walkthrough and talking points
+- Phase 22: v0.1.0 release checkpoint
+- Phase 23: real baseline from per-video sample features
+- Phase 24: baseline evidence in Streamlit UI
+- Phase 25: GitHub Release assets
+- Phase 27: public launch hygiene
 ## License
 
 This project code is released under the MIT License. See `LICENSE`.
