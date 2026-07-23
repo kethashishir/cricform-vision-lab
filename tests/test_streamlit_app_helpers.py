@@ -7,8 +7,8 @@ import pytest
 
 from cricform.app.streamlit_app import (
     artifact_paths_for_mode,
-    baseline_manifest_evidence,
     artifact_status,
+    baseline_manifest_evidence,
     clean_report_markdown_for_streamlit,
     comparison_badge_status,
     key_metric_cards,
@@ -102,25 +102,35 @@ def test_key_metric_cards() -> None:
 def test_artifact_paths_for_mode_real() -> None:
     paths = artifact_paths_for_mode("real")
 
-    assert paths["overlay_video"].as_posix().endswith(
-        "outputs/real_demo/test_pull_pull_0025_pose_overlay_slow.mp4"
+    assert (
+        paths["overlay_video"]
+        .as_posix()
+        .endswith("outputs/real_demo/test_pull_pull_0025_pose_overlay_slow.mp4")
     )
-    assert paths["original_overlay_video"].as_posix().endswith(
-        "outputs/real_demo/test_pull_pull_0025_pose_overlay.mp4"
+    assert (
+        paths["original_overlay_video"]
+        .as_posix()
+        .endswith("outputs/real_demo/test_pull_pull_0025_pose_overlay.mp4")
     )
-    assert paths["real_demo_summary"].as_posix().endswith(
-        "data/processed/real_demo/real_demo_summary.json"
+    assert (
+        paths["real_demo_summary"]
+        .as_posix()
+        .endswith("data/processed/real_demo/real_demo_summary.json")
     )
-    assert paths["baseline_manifest"].as_posix().endswith(
-        "data/processed/real_demo/baselines/real_demo_baseline_manifest.csv"
+    assert (
+        paths["baseline_manifest"]
+        .as_posix()
+        .endswith("data/processed/real_demo/baselines/real_demo_baseline_manifest.csv")
     )
 
 
 def test_artifact_paths_for_mode_synthetic() -> None:
     paths = artifact_paths_for_mode("synthetic")
 
-    assert paths["overlay_video"].as_posix().endswith(
-        "outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4"
+    assert (
+        paths["overlay_video"]
+        .as_posix()
+        .endswith("outputs/sample_overlays/synthetic_batting_sample_pose_overlay.mp4")
     )
 
 
